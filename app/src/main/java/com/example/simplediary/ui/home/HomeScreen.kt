@@ -16,6 +16,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -56,6 +57,7 @@ fun HomeScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
+        floatingActionButtonPosition = FabPosition.Center,
         topBar = {
             TopAppBar(
                 title = { Text("简日记") },
@@ -70,7 +72,11 @@ fun HomeScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onNewEntry) {
+            // 底部额外留出空间，让新增按钮比默认 FAB 位置略微上移。
+            FloatingActionButton(
+                onClick = onNewEntry,
+                modifier = Modifier.padding(bottom = 16.dp),
+            ) {
                 Icon(Icons.Default.Add, contentDescription = "新建日记")
             }
         },
