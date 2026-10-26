@@ -1,0 +1,103 @@
+阶段 0：初始化项目
+text
+创建 Android 项目：
+- App 名：简日记
+- 包名：com.example.simplediary
+- minSdk 26
+- Kotlin + Jetpack Compose
+- 添加 Room、Navigation Compose、DataStore、kotlinx.serialization 依赖
+- 建立目录结构
+- AndroidManifest 不声明 INTERNET 权限
+- 添加基础主题和 MainActivity
+完成后运行 assembleDebug。
+阶段 1：Room 数据层
+text
+实现 DiaryEntry、DiaryDao、DiaryDatabase、DiaryRepository。
+字段严格按 PRD：id、title、content、contentFormat、createdAt、updatedAt、isDeleted、deletedAt。
+实现 observeActiveEntries、searchActiveEntries、observeTrash、getById、insert、update、softDelete、restore、purge、purgeAllTrash、getAllForBackup、clearAll、insertAll。
+提供 Application 级简单容器创建 database 和 repository。
+阶段 2：导航和主题
+text
+实现 Navigation Compose 路由：
+home、edit/{id?}、search、trash、settings。
+实现 ThemeMode 的 DataStore 读取和 Theme.kt：
+SYSTEM/LIGHT/DARK，深色模式立即生效。
+MainActivity 使用主题包裹 NavHost。
+阶段 3：首页列表
+text
+实现 HomeScreen 和 HomeViewModel：
+- 观察未删除日记，按 updatedAt 倒序
+- 列表项显示标题、两行摘要、更新时间
+- 空标题显示“无标题”
+- 空状态
+- FAB 新建跳转 edit
+- 点击跳转 edit/{id}
+- 顶部搜索按钮、设置按钮
+- 长按弹出导出 TXT/删除，删除需确认
+先不实现导出细节，可留 TODO 回调。
+阶段 4：编辑页与自动保存
+text
+实现 EditScreen 和 EditViewModel：
+- 支持新建和编辑
+- 标题、正文纯文本
+- 字数统计
+- 输入变化后 1 秒防抖保存
+- 返回时立即 flush 保存
+- 标题和正文都为空不创建记录
+- 新建首次保存后拿到 id
+- 顶部显示保存状态
+- 更多菜单：导出 TXT、删除
+- 删除后返回首页
+阶段 5：搜索
+text
+实现 SearchScreen 和 SearchViewModel：
+- 输入关键词实时搜索标题和正文
+- 排除回收站
+- 空关键词显示全部未删除日记
+- 点击结果进入编辑
+阶段 6：回收站
+text
+实现 TrashScreen 和 TrashViewModel：
+- 列表显示 isDeleted=1，按 deletedAt 倒序
+- 恢复
+- 永久删除，需确认
+- 清空回收站，需二次确认
+- 操作后列表自动刷新
+阶段 7：设置页
+text
+实现 SettingsScreen 和 SettingsViewModel：
+- 主题模式三选一，保存到 DataStore
+- 全部导出 TXT 入口
+- 备份全部数据入口
+- 从备份恢复入口
+- 显示版本号
+入口先接回调，导出和备份在下一阶段实现。
+阶段 8：TXT 导出
+text
+实现 Exporter 接口、TxtExporter、ZipExporter、FileNames。
+- 单篇导出 UTF-8 TXT，使用 SAF CreateDocument
+- 文件名 yyyy-MM-dd_HHmm_标题.txt，非法字符替换
+- 全部导出未删除日记为 ZIP，使用 SAF CreateDocument
+- ZIP 内 entries/*.txt 和 index.txt
+- TXT 内容包含标题、创建时间、更新时间、分隔线、正文
+- 中文不乱码
+阶段 9：备份与恢复 ZIP
+text
+实现 BackupManager：
+- 备份全部数据到 ZIP，使用 SAF CreateDocument
+- 结构：manifest.json、entries.json、settings.json
+- entries.json 包含全部字段，包括回收站
+- 恢复使用 SAF OpenDocument
+- 校验 manifest 版本
+- 二次确认“覆盖当前全部数据”
+- 事务内 clearAll + insertAll
+- 恢复后刷新列表和设置
+使用 kotlinx.serialization。
+阶段 10：验收与打包
+text
+完成以下验收：
+- assembleDebug 通过
+- 手动验收 PRD 验收标准
+- 检查 AndroidManifest 无 INTERNET
+- 添加必要单元测试：文件名清洗、备份序列化、DAO 基本查询
+- 输出 APK 路径和已知问题清单
