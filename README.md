@@ -2,7 +2,14 @@
 
 一个仅在本机保存纯文本日记的 Android App，使用 Kotlin、Jetpack Compose、Room、MVVM、Navigation Compose、DataStore 和 kotlinx.serialization。
 
-## 构建
+## 先看这里
+
+如果你有 Java、HTML/CSS/JavaScript、Vue、Python 或 C 的基础，但刚接触 Kotlin 和 Android，请先阅读：
+
+- [项目架构与 Kotlin 入门说明](docs/ARCHITECTURE.md)
+- [如何打包 APK](docs/BUILD_APK.md)
+
+## 快速构建
 
 需要 JDK 17 与 Android SDK Platform 33。
 

@@ -51,6 +51,8 @@ fun SimpleDiaryNavHost(container: AppContainer) {
         }
     }
 
+    // CreateDocument 会打开 Android 系统文件选择器，返回一个 content:// URI。
+    // 应用只通过 ContentResolver 写入这个 URI，不需要存储权限。
     val createTextDocument = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("text/plain"),
     ) { uri ->
@@ -59,6 +61,7 @@ fun SimpleDiaryNavHost(container: AppContainer) {
         if (uri == null || entry == null) return@rememberLauncherForActivityResult
 
         scope.launch {
+            // 文件读写属于阻塞 I/O，必须切换到 IO 线程，不能占用 Compose 的 UI 线程。
             val error = withContext(Dispatchers.IO) {
                 runCatching {
                     context.openRequiredOutputStream(uri)
@@ -116,6 +119,7 @@ fun SimpleDiaryNavHost(container: AppContainer) {
                     val backup = context.contentResolver.openInputStream(uri)?.use {
                         container.backupManager.readBackup(it)
                     } ?: throw IOException("无法读取备份文件")
+                    // 日记清空和批量插入在同一次事务中完成。
                     container.diaryRepository.replaceAll(backup.entries)
                     container.settingsRepository.setThemeMode(
                         ThemeMode.fromStorage(backup.settings.themeMode),
@@ -142,6 +146,7 @@ fun SimpleDiaryNavHost(container: AppContainer) {
         openBackupDocument.launch(arrayOf("application/zip", "application/octet-stream"))
     }
 
+    // NavHost 根据路由决定显示哪个 Screen；每个路由创建自己的 ViewModel。
     NavHost(
         navController = navController,
         startDestination = "home",

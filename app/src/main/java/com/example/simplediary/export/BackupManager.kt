@@ -17,6 +17,7 @@ import kotlinx.serialization.json.Json
 
 const val BACKUP_VERSION = 1
 
+// @Serializable 让 kotlinx.serialization 在编译期生成 JSON 编解码代码。
 @Serializable
 data class BackupManifest(
     val version: Int,
@@ -43,6 +44,7 @@ class BackupException(message: String, cause: Throwable? = null) :
     IllegalArgumentException(message, cause)
 
 class BackupManager {
+    // ignoreUnknownKeys 允许新版本备份多出字段时，旧版本仍能读取已知字段。
     private val json = Json {
         prettyPrint = true
         encodeDefaults = true
@@ -89,6 +91,7 @@ class BackupManager {
             ?: throw BackupException("备份缺少 settings.json")
 
         val manifest = decodeOrThrow<BackupManifest>(manifestText)
+        // 版本校验失败时拒绝恢复，防止用不兼容的数据覆盖当前数据库。
         if (manifest.version != BACKUP_VERSION) {
             throw BackupException(
                 "不支持的备份版本：${manifest.version}，当前支持版本：$BACKUP_VERSION",

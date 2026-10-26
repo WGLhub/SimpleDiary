@@ -32,10 +32,17 @@ data class EditUiState(
     val savedAt: Long? = null,
 )
 
+/**
+ * 编辑页的 ViewModel，负责输入状态、自动保存和新建日记拿到数据库 id。
+ *
+ * ViewModel 的生命周期比 Composable 长：旋转屏幕造成界面重建时，正在编辑的
+ * 数据仍保存在 ViewModel 中。协程由 viewModelScope 管理，页面销毁时会自动取消。
+ */
 class EditViewModel(
     private val repository: DiaryRepository,
     initialEntryId: Long?,
 ) : ViewModel() {
+    // MutableStateFlow 只能在 ViewModel 内修改；state 对外只读。
     private val _state = MutableStateFlow(
         EditUiState(
             entryId = initialEntryId,
@@ -108,6 +115,7 @@ class EditViewModel(
     }
 
     suspend fun flush() {
+        // 返回页面或导出前取消防抖计时器，立即把最新内容写入数据库。
         debounceJob?.cancel()
         debounceJob = null
         saveNow()
@@ -131,6 +139,7 @@ class EditViewModel(
     }
 
     private fun scheduleSave() {
+        // 防抖：连续输入时不断取消旧计时器，停止输入 1 秒后才真正保存。
         debounceJob?.cancel()
         debounceJob = viewModelScope.launch {
             delay(1_000)
@@ -139,10 +148,12 @@ class EditViewModel(
     }
 
     private suspend fun saveNow() {
+        // Mutex 保证防抖保存、返回时保存等调用不会同时修改同一条记录。
         saveMutex.withLock {
             if (!loaded || deleted) return
 
             val snapshot = _state.value
+            // 新建页面如果标题和正文都为空，不创建数据库记录。
             if (snapshot.title.isBlank() && snapshot.content.isBlank() && currentId == null) {
                 _state.update { it.copy(saveStatus = SaveStatus.IDLE) }
                 return
@@ -161,6 +172,7 @@ class EditViewModel(
                         createdAt = now,
                         updatedAt = now,
                     )
+                    // Room 插入成功后会返回自增 id；后续保存转为 UPDATE。
                     val newId = repository.insert(newEntry)
                     currentId = newId
                     createdAt = now

@@ -15,6 +15,8 @@ class MainActivity : ComponentActivity() {
         val container = (application as SimpleDiaryApplication).container
 
         setContent {
+            // collectAsState 把 DataStore 的 Flow 转成 Compose 可观察状态。
+            // 主题变化后 Compose 自动重组，不需要手动重启 Activity。
             val themeMode by container.settingsRepository.themeMode.collectAsState(
                 initial = ThemeMode.SYSTEM,
             )

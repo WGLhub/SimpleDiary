@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
+// DataStore 实例必须全局唯一，因此放在文件级扩展属性中。
 private val Context.settingsDataStore by preferencesDataStore(name = "settings")
 
 enum class ThemeMode {
@@ -28,6 +29,7 @@ class SettingsRepository(
 ) {
     private val themeModeKey = stringPreferencesKey("theme_mode")
 
+    // data 是一个 Flow：每次写入设置后都会重新发出值，MainActivity 会立即重组主题。
     val themeMode: Flow<ThemeMode> = context.settingsDataStore.data
         .catch { error ->
             if (error is IOException) emit(androidx.datastore.preferences.core.emptyPreferences())

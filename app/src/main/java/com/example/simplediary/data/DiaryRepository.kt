@@ -5,6 +5,11 @@ import com.example.simplediary.data.local.DiaryDatabase
 import com.example.simplediary.data.local.DiaryEntry
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * Repository 是 ViewModel 和数据源之间的中间层。
+ *
+ * 页面不需要知道数据来自 Room 还是别的实现，只调用语义清晰的方法。
+ */
 class DiaryRepository(
     private val database: DiaryDatabase,
 ) {
@@ -37,6 +42,10 @@ class DiaryRepository(
 
     suspend fun insertAll(entries: List<DiaryEntry>) = dao.insertAll(entries)
 
+    /**
+     * 恢复备份时，清空和批量插入必须同成功或同失败。
+     * withTransaction 对应 SQLite 的事务，可避免中途失败导致只删除一半数据。
+     */
     suspend fun replaceAll(entries: List<DiaryEntry>) {
         database.withTransaction {
             dao.clearAll()
